@@ -22,16 +22,9 @@ def _init_firestore():
             firebase_admin.initialize_app(cred, options=options)
         return firestore.client()
 
-    if (
-        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        or os.getenv("CODESPACES")
-        or PROJECT_ID
-    ):
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app(options=options)
-        return firestore.client()
-
-    return None
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(options=options)
+    return firestore.client()
 
 
 db = _init_firestore()
@@ -40,7 +33,7 @@ db = _init_firestore()
 def init_db():
     if db is None:
         raise RuntimeError(
-            f"Missing {CRED_PATH} and no Google Cloud credentials detected for project '{PROJECT_ID}'."
+            f"Failed to initialize Firestore client for project '{PROJECT_ID}'."
         )
     users_ref = db.collection("users")
     if not list(users_ref.limit(1).stream()):
