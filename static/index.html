@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NP Solutions — NPS Master Key</title>
+  <style>
+    :root { --bg: #0f172a; --card: #ffffff; --border: #cbd5e1; --primary: #2563eb; --primary-hover: #1d4ed8; --accent: #0ea5e9; --text: #0f172a; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #f1f5f9; color: var(--text); }
+    .topbar { background: var(--bg); color: white; padding: 0.85rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--accent); }
+    .brand-cluster { display: flex; align-items: center; gap: 1rem; }
+    .logo-slot { width: 52px; height: 52px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #0ea5e9); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: white; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+    .logo-slot img { width: 100%; height: 100%; object-fit: contain; background: white; }
+    .brand-title h1 { margin: 0; font-size: 1.35rem; }
+    .brand-title span { font-size: 0.8rem; color: #94a3b8; }
+    .user-bar { display: flex; align-items: center; gap: 0.65rem; font-size: 0.85rem; }
+    .pill { background: #334155; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 600; color: #e2e8f0; }
+    .pill.role { background: #0284c7; color: white; text-transform: uppercase; font-size: 0.75rem; }
+    .login-wrap { max-width: 420px; margin: 4.5rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(15,23,42,0.12); border-top: 5px solid var(--primary); }
+    .login-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .container { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
+    .nav-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .tab-btn { background: white; color: #334155; border: 1px solid var(--border); padding: 0.65rem 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.25rem; border: 1px solid #e2e8f0; }
+    .card h2 { margin-top: 0; font-size: 1.15rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    label { display: block; font-weight: 600; font-size: 0.85rem; margin-top: 0.65rem; color: #334155; }
+    input, select, textarea { width: 100%; padding: 0.55rem; margin-top: 0.25rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.92rem; }
+    button.primary { background: var(--primary); color: white; border: none; padding: 0.7rem 1.35rem; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+    button.primary:hover { background: var(--primary-hover); }
+    button.secondary { background: #475569; color: white; border: none; padding: 0.45rem 0.9rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+    button.danger { background: #dc2626; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.88rem; }
+    th, td { border: 1px solid #e2e8f0; padding: 0.55rem; text-align: left; }
+    th { background: #f8fafc; font-weight: 700; }
+    .axis-box { border: 1px solid #cbd5e1; padding: 0.85rem; border-radius: 8px; margin-top: 0.75rem; background: #f8fafc; }
+    .alert-warn { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; }
+    .alert-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem; }
+    @media print {
+      .topbar .user-bar, .nav-tabs, .no-print { display: none !important; }
+      body { background: white; }
+      .card { box-shadow: none; border: 1px solid #94a3b8; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-cluster">
+      <div class="logo-slot" id="headerLogoSlot">NPS</div>
+      <div class="brand-title">
+        <h1 id="headerCompanyName">NP Solutions</h1>
+        <span>NPS Master Key • <span id="storageModeBadge">Initializing...</span></span>
+      </div>
+    </div>
+    <div class="user-bar" id="userBar" style="display:none;">
+      <span class="pill">Client: <strong id="activeClientBadge">None</strong></span>
+      <span class="pill" id="userNameBadge">User</span>
+      <span class="pill role" id="userRoleBadge">Role</span>
+      <button class="secondary" onclick="logout()">Sign Out</button>
+    </div>
+  </header>
+
+  <div id="loginView" class="login-wrap">
+    <div class="login-header">
+      <div class="logo-slot" id="loginLogoSlot">NPS</div>
+      <div>
+        <h2 style="margin:0;">NP Solutions Sign In</h2>
+        <small style="color:#64748b;">Authorized Locksmith & Security Access</small>
+      </div>
+    </div>
+    <label>Username</label>
+    <input id="loginUser" value="admin" />
+    <label>Password</label>
+    <input id="loginPass" type="password" value="npsadmin" />
+    <button class="primary" style="width:100%;" onclick="login()">Sign In to NPS Master Key</button>
+    <p id="loginError" style="color:#dc2626; font-size:0.85rem; margin-top:0.75rem;"></p>
+    <small style="color:#64748b; display:block; margin-top:0.75rem;">Default Admin Login: <code>admin</code> / <code>npsadmin</code></small>
+  </div>
+
+  <div id="appWorkspace" class="container" style="display:none;">
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('designer', this)">1. System & Tree Designer</button>
+      <button class="tab-btn" onclick="switchTab('clients', this)">2. Client Records</button>
+      <button class="tab-btn" onclick="switchTab('reverse', this)">3. Paper-System Reverse Solver</button>
+      <button class="tab-btn" onclick="switchTab('bench', this)">4. Bench Pinning & Depth Reference</button>
+      <button class="tab-btn" id="adminTabBtn" onclick="switchTab('admin', this)">5. Users & NP Solutions Logo</button>
+    </div>
+
+    <div id="tab-designer">
+      <div class="card no-print">
+        <h2>Hardware Profile & Keyway Presets</h2>
+        <div class="grid-2">
+          <div>
+            <label>Manufacturer / Keyway Preset</label>
+            <select id="presetSelect" onchange="applyPreset()"></select>
+          </div>
+          <div>
+            <label>System / Facility Name</label>
+            <input id="systemName" value="Main Facility Master System" />
+          </div>
+        </div>
+        <div id="axesContainer"></div>
+        <button class="secondary" style="margin-top:0.75rem;" onclick="addCustomAxis()">+ Add Custom Axis (Dimple / Side-Pin)</button>
+      </div>
+
+      <div class="card no-print">
+        <h2>Master & Sub-Master Hierarchy Counts</h2>
+        <div class="grid-3">
+          <div><label>Master Cylinders (A, B, C...)</label><input id="masterCount" type="number" value="2" min="0" max="26" /></div>
+          <div><label>Sub-Masters per Master (AA, AB...)</label><input id="submasterCount" type="number" value="2" min="0" max="26" /></div>
+          <div><label>Change Keys per Sub-Master</label><input id="changeCount" type="number" value="3" min="1" max="100" /></div>
+        </div>
+        <button class="primary" onclick="generateSystem()">Generate Keys, Pinning & Security Audit</button>
+      </div>
+
+      <div id="results" class="card" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="border:none; margin:0;">Key Cutting Schedule (<span id="keyTotal">0</span> Keys)</h2>
+          <div class="no-print" style="display:flex; gap:0.5rem;">
+            <button class="secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="secondary" onclick="window.print()">Print Work Order / Charts</button>
+          </div>
+        </div>
+        <table id="keysTable"><thead><tr><th>Key ID</th><th>Level</th><th>Reports To</th><th>Bitting (By Axis)</th></tr></thead><tbody></tbody></table>
+
+        <h2 style="margin-top:1.5rem;">Cylinder Pinning & Phantom Security Audit</h2>
+        <table id="doorsTable"><thead><tr><th>Door</th><th>Operating Keys</th><th>Phantom Keys</th><th>Interchange Conflicts</th><th>Pinning Chart</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div id="tab-clients" style="display:none;">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Add Client / Facility Record</h2>
+          <label>Company / Facility Name *</label><input id="cCompany" placeholder="e.g., Desert Valley Medical Center" />
+          <label>Contact Person</label><input id="cContact" />
+          <div class="grid-2">
+            <div><label>Phone</label><input id="cPhone" /></div>
+            <div><label>Email</label><input id="cEmail" /></div>
+          </div>
+          <label>Site Address</label><input id="cAddress" />
+          <label>Keyway Restrictions & Security Notes</label><textarea id="cNotes" rows="2"></textarea>
+          <button class="primary" onclick="saveClient()">Save Client</button>
+        </div>
+        <div class="card">
+          <h2>Client Directory</h2>
+          <table id="clientsTable"><thead><tr><th>Company</th><th>Contact</th><th>Select</th></tr></thead><tbody></tbody></table>
+          <h3 style="margin-top:1.5rem;">Saved Systems for Selected Client</h3>
+          <table id="savedSystemsTable"><thead><tr><th>System Name</th><th>Keyway</th><th>Created By</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-reverse" style="display:none;">
+      <div class="card">
+        <h2>Paper-System Reverse Pinning Decoder</h2>
+        <p style="color:#475569; font-size:0.9rem;">Enter physical bottom pins and master wafers from an existing cylinder to decode every working key bitting.</p>
+        <div id="reverseChambers"></div>
+        <button class="primary" onclick="runReverseSolver()">Decode All Working Key Bittings</button>
+        <div id="reverseResults" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+
+    <div id="tab-bench" style="display:none;">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Single-Cylinder Bench Pinning & MACS Calculator</h2>
+          <label>Cylinder Type</label>
+          <select id="benchSfic"><option value="false">Standard Inline Cylinder</option><option value="true">SFIC A2 Core (Stack 23)</option></select>
+          <label>MACS Limit</label><input id="benchMacs" type="number" value="7" />
+          <label>Operating Key Bittings (one per line, comma-separated)</label>
+          <textarea id="benchKeys" rows="4">3,1,5,2,6,4
+5,3,5,4,6,2</textarea>
+          <label>Control Key Bitting (SFIC only, comma-separated)</label><input id="benchCtrl" value="8,7,9,8,7,6" />
+          <button class="primary" onclick="runBenchCalc()">Calculate Stack & Check MACS</button>
+          <div id="benchResults" style="margin-top:1rem;"></div>
+        </div>
+        <div class="card">
+          <h2>Locksmith Depth & Specification Quick Reference</h2>
+          <table>
+            <thead><tr><th>Manufacturer / Keyway</th><th>Increment</th><th>Depths</th><th>MACS</th><th>SFIC Stack</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Schlage (C / E / Everest)</strong></td><td>.015"</td><td>0 (0.335") – 9 (0.200")</td><td>7</td><td>N/A</td></tr>
+              <tr><td><strong>Kwikset (KW1 / KW10)</strong></td><td>.023"</td><td>1 (0.329") – 6 (0.214")</td><td>4</td><td>N/A</td></tr>
+              <tr><td><strong>Best / Falcon SFIC (A2)</strong></td><td>.0125"</td><td>0 (0.318") – 9 (0.2055")</td><td>9</td><td>23</td></tr>
+              <tr><td><strong>Best / Falcon SFIC (A4)</strong></td><td>.021"</td><td>0 (0.318") – 5 (0.213")</td><td>5</td><td>14</td></tr>
+              <tr><td><strong>Yale 8 / Para</strong></td><td>.019"</td><td>0 (0.334") – 9 (0.163")</td><td>8</td><td>N/A</td></tr>
+              <tr><td><strong>Sargent (LA–LC)</strong></td><td>.020"</td><td>1 (0.328") – 10 (0.148")</td><td>7</td><td>N/A</td></tr>
+              <tr><td><strong>Corbin Russwin (Z-Class)</strong></td><td>.028"</td><td>1 (0.342") – 6 (0.202")</td><td>5</td><td>N/A</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-admin" style="display:none;">
+      <div class="grid-2">
+        <div class="card">
+          <h2>NP Solutions Logo & Branding</h2>
+          <label>Company / Shop Name</label><input id="brandNameInput" value="NP Solutions" />
+          <label>Upload NP Solutions Logo (PNG, SVG, JPG)</label><input type="file" id="logoFileInput" accept="image/*" onchange="previewLogo(event)" />
+          <button class="primary" onclick="saveBranding()">Save Logo & Company Name</button>
+        </div>
+        <div class="card">
+          <h2>Create Staff User & Access Level</h2>
+          <div class="grid-2">
+            <div><label>Username</label><input id="newUsername" placeholder="e.g., jsmith" /></div>
+            <div><label>Full Name</label><input id="newFullName" placeholder="John Smith" /></div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Access Level (Role)</label>
+              <select id="newUserRole">
+                <option value="admin">Admin (Full Control + User Management)</option>
+                <option value="locksmith">Master Locksmith (Design Systems + Full Bittings)</option>
+                <option value="tech">Bench Tech (Pinning Charts Only; Top Masters Masked)</option>
+                <option value="viewer">Auditor / Read-Only</option>
+              </select>
+            </div>
+            <div><label>Initial Password</label><input id="newUserPass" type="password" /></div>
+          </div>
+          <button class="primary" onclick="createStaffUser()">Create User Account</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Authorized Staff & Access Levels</h2>
+        <table id="usersTable"><thead><tr><th>Username</th><th>Full Name</th><th>Access Level</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let TOKEN = localStorage.getItem("nps_token") || "";
+    let CURRENT_USER = null;
+    let PRESETS = {};
+    let CURRENT_AXES = [];
+    let IS_SFIC = false;
+    let SFIC_HEIGHT = 23;
+    let SELECTED_CLIENT_ID = null;
+    let LAST_GENERATED = null;
+    let UPLOADED_LOGO_DATA = "";
+
+    function authHeaders() { return { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` }; }
+
+    async function loadBranding() {
+      const res = await fetch("/api/branding");
+      const b = await res.json();
+      const name = b.company_name || "NP Solutions";
+      document.getElementById("headerCompanyName").innerText = name;
+      document.getElementById("brandNameInput").value = name;
+      document.getElementById("storageModeBadge").innerText = b.storage_mode || "";
+      UPLOADED_LOGO_DATA = b.logo_data_url || "";
+      renderLogoSlots(UPLOADED_LOGO_DATA);
+    }
+
+    function renderLogoSlots(dataUrl) {
+      [document.getElementById("headerLogoSlot"), document.getElementById("loginLogoSlot")].forEach(el => {
+        if (el) el.innerHTML = dataUrl ? `<img src="${dataUrl}" alt="NP Solutions Logo" />` : "NPS";
+      });
+    }
+
+    function previewLogo(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => { UPLOADED_LOGO_DATA = e.target.result; renderLogoSlots(UPLOADED_LOGO_DATA); };
+      reader.readAsDataURL(file);
+    }
+
+    async function saveBranding() {
+      const res = await fetch("/api/branding", {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({ company_name: document.getElementById("brandNameInput").value, logo_data_url: UPLOADED_LOGO_DATA })
+      });
+      if (res.ok) { loadBranding(); alert("NP Solutions branding & logo saved!"); }
+    }
+
+    async function login() {
+      const res = await fetch("/api/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: document.getElementById("loginUser").value, password: document.getElementById("loginPass").value })
+      });
+      const data = await res.json();
+      if (!res.ok) { document.getElementById("loginError").innerText = data.detail || "Login failed"; return; }
+      TOKEN = data.token;
+      localStorage.setItem("nps_token", TOKEN);
+      await bootWorkspace();
+    }
+
+    async function logout() {
+      await fetch("/api/logout", { method: "POST", headers: authHeaders() });
+      TOKEN = ""; localStorage.removeItem("nps_token");
+      document.getElementById("appWorkspace").style.display = "none";
+      document.getElementById("userBar").style.display = "none";
+      document.getElementById("loginView").style.display = "block";
+    }
+
+    async function bootWorkspace() {
+      if (!TOKEN) return;
+      const meRes = await fetch("/api/me", { headers: authHeaders() });
+      if (!meRes.ok) { logout(); return; }
+      CURRENT_USER = await meRes.json();
+
+      document.getElementById("loginView").style.display = "none";
+      document.getElementById("appWorkspace").style.display = "block";
+      document.getElementById("userBar").style.display = "flex";
+      document.getElementById("userNameBadge").innerText = CURRENT_USER.full_name;
+      document.getElementById("userRoleBadge").innerText = CURRENT_USER.role;
+      document.getElementById("adminTabBtn").style.display = CURRENT_USER.role === "admin" ? "inline-block" : "none";
+
+      const pRes = await fetch("/api/presets", { headers: authHeaders() });
+      PRESETS = await pRes.json();
+      document.getElementById("presetSelect").innerHTML = Object.entries(PRESETS).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join("");
+      applyPreset();
+      buildReverseSolverInputs();
+    }
+
+    function switchTab(tab, btn) {
+      ["designer", "clients", "reverse", "bench", "admin"].forEach(t => {
+        document.getElementById(`tab-${t}`).style.display = t === tab ? "block" : "none";
+      });
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (tab === "clients") loadClients();
+      if (tab === "admin") loadUsers();
+    }
+
+    function applyPreset() {
+      const p = PRESETS[document.getElementById("presetSelect").value];
+      IS_SFIC = p.is_sfic; SFIC_HEIGHT = p.sfic_stack_height || 23;
+      CURRENT_AXES = JSON.parse(JSON.stringify(p.axes));
+      renderAxes();
+    }
+
+    function addCustomAxis() {
+      CURRENT_AXES.push({ name: `Axis ${CURRENT_AXES.length + 1}`, pin_count: 4, min_depth: 1, max_depth: 5, macs: 4, step_size: 1 });
+      renderAxes();
+    }
+
+    function renderAxes() {
+      document.getElementById("axesContainer").innerHTML = CURRENT_AXES.map((ax, idx) => {
+        const defaultTm = Array.from({length: ax.pin_count}, (_, i) => ((i * 2 + 1) % (ax.max_depth - ax.min_depth + 1)) + ax.min_depth).join(",");
+        const defaultCtrl = Array.from({length: ax.pin_count}, () => ax.max_depth - 1).join(",");
+        return `
+          <div class="axis-box">
+            <div class="grid-3">
+              <div><label>Axis Name</label><input id="ax_name_${idx}" value="${ax.name}" /></div>
+              <div><label>Pins / Chambers</label><input id="ax_pins_${idx}" type="number" value="${ax.pin_count}" /></div>
+              <div><label>MACS / Step Size</label>
+                <div style="display:flex;gap:4px;">
+                  <input id="ax_macs_${idx}" type="number" value="${ax.macs}" />
+                  <input id="ax_step_${idx}" type="number" value="${ax.step_size}" />
+                </div>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div><label>Top Master Bitting (${ax.min_depth}-${ax.max_depth})</label><input id="ax_tm_${idx}" value="${defaultTm}" /></div>
+              <div style="display:${IS_SFIC ? 'block' : 'none'};"><label>SFIC Control Bitting</label><input id="ax_ctrl_${idx}" value="${defaultCtrl}" /></div>
+            </div>
+            <input type="hidden" id="ax_min_${idx}" value="${ax.min_depth}" />
+            <input type="hidden" id="ax_max_${idx}" value="${ax.max_depth}" />
+          </div>`;
+      }).join("");
+    }
+
+    async function generateSystem() {
+      const axes = [], tmMap = {}, ctrlMap = {};
+      CURRENT_AXES.forEach((_, idx) => {
+        const name = document.getElementById(`ax_name_${idx}`).value;
+        const tm = document.getElementById(`ax_tm_${idx}`).value.split(",").map(Number);
+        axes.push({
+          name, pin_count: tm.length,
+          min_depth: Number(document.getElementById(`ax_min_${idx}`).value),
+          max_depth: Number(document.getElementById(`ax_max_${idx}`).value),
+          macs: Number(document.getElementById(`ax_macs_${idx}`).value),
+          step_size: Number(document.getElementById(`ax_step_${idx}`).value)
+        });
+        tmMap[name] = tm;
+        if (IS_SFIC) ctrlMap[name] = document.getElementById(`ax_ctrl_${idx}`).value.split(",").map(Number);
+      });
+
+      const presetCode = document.getElementById("presetSelect").value;
+      const res = await fetch("/api/generate", {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({
+          client_id: SELECTED_CLIENT_ID,
+          system_name: document.getElementById("systemName").value,
+          keyway_code: presetCode, profile_name: PRESETS[presetCode].name,
+          is_sfic: IS_SFIC, sfic_stack_height: SFIC_HEIGHT, axes,
+          top_master_bitting: tmMap, control_bitting: IS_SFIC ? ctrlMap : null,
+          master_count: Number(document.getElementById("masterCount").value),
+          submasters_per_master: Number(document.getElementById("submasterCount").value),
+          changes_per_submaster: Number(document.getElementById("changeCount").value)
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert("Error: " + data.detail); return; }
+      LAST_GENERATED = data;
+      renderResults(data.keys, data.doors, data.audits);
+      if (data.saved_system_id) alert("Saved to active client record!");
+    }
+
+    function renderResults(keys, doors, audits) {
+      document.getElementById("results").style.display = "block";
+      document.getElementById("keyTotal").innerText = keys.length;
+      document.querySelector("#keysTable tbody").innerHTML = keys.map(k => {
+        const bittingStr = Object.entries(k.bitting).map(([ax, cuts]) => `<strong>${ax}:</strong> ${cuts.join("-")}`).join(" | ");
+        return `<tr><td><strong>${k.key_id}</strong></td><td>${k.level}</td><td>${k.parent_id || "-"}</td><td>${bittingStr}</td></tr>`;
+      }).join("");
+
+      document.querySelector("#doorsTable tbody").innerHTML = doors.map((d, i) => {
+        const audit = audits ? audits[i] : { phantom_key_count: "-", unauthorized_interchange_keys: [] };
+        const pinSummary = Object.entries(d.pin_stacks).map(([ax, stacks]) => {
+          const cols = stacks.map(s => `[B:${s.bottom}${s.masters.length ? ' M:' + s.masters.join('+') : ''}${s.control_buildup !== undefined ? ' C:' + s.control_buildup : ''}]`).join(" ");
+          return `<div><strong>${ax}:</strong> ${cols}</div>`;
+        }).join("");
+        const conflicts = audit.unauthorized_interchange_keys.length ? `<span style="color:#dc2626;font-weight:700;">${audit.unauthorized_interchange_keys.join(", ")}</span>` : "None";
+        return `<tr><td>${d.door_name}</td><td>${d.assigned_key_ids.join(", ")}</td><td>${audit.phantom_key_count}</td><td>${conflicts}</td><td>${pinSummary}</td></tr>`;
+      }).join("");
+    }
+
+    function exportCSV() {
+      if (!LAST_GENERATED) return;
+      const rows = [["Key ID", "Level", "Parent ID", "Bitting"]];
+      LAST_GENERATED.keys.forEach(k => {
+        const b = Object.entries(k.bitting).map(([ax, cuts]) => `${ax}:${cuts.join("-")}`).join(" | ");
+        rows.push([k.key_id, k.level, k.parent_id || "-", b]);
+      });
+      const blob = new Blob([rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n")], { type: "text/csv" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "nps_master_key_schedule.csv"; a.click();
+    }
+
+    async function saveClient() {
+      const company_name = document.getElementById("cCompany").value;
+      if (!company_name) { alert("Company name required."); return; }
+      await fetch("/api/clients", {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({
+          company_name, contact_name: document.getElementById("cContact").value,
+          phone: document.getElementById("cPhone").value, email: document.getElementById("cEmail").value,
+          address: document.getElementById("cAddress").value, notes: document.getElementById("cNotes").value
+        })
+      });
+      document.getElementById("cCompany").value = "";
+      loadClients();
+    }
+
+    async function loadClients() {
+      const res = await fetch("/api/clients", { headers: authHeaders() });
+      const clients = await res.json();
+      document.querySelector("#clientsTable tbody").innerHTML = clients.map(c =>
+        `<tr><td><strong>${c.company_name}</strong><br><small>${c.address || ""}</small></td><td>${c.contact_name || ""}<br><small>${c.phone || ""}</small></td>
+         <td><button class="secondary" onclick="selectClient('${c.id}', '${c.company_name.replace(/'/g, "\\'")}')">Select</button></td></tr>`
+      ).join("");
+    }
+
+    async function selectClient(id, name) {
+      SELECTED_CLIENT_ID = id;
+      document.getElementById("activeClientBadge").innerText = name;
+      const res = await fetch(`/api/clients/${id}/systems`, { headers: authHeaders() });
+      const systems = await res.json();
+      document.querySelector("#savedSystemsTable tbody").innerHTML = systems.map(s =>
+        `<tr><td>${s.system_name}</td><td>${s.keyway_code}</td><td>${s.created_by || "-"}</td>
+         <td><button class="secondary" onclick="loadSavedSystem('${s.id}')">Open</button></td></tr>`
+      ).join("");
+    }
+
+    async function loadSavedSystem(sysId) {
+      const res = await fetch(`/api/systems/${sysId}`, { headers: authHeaders() });
+      const data = await res.json();
+      LAST_GENERATED = data;
+      switchTab("designer", document.querySelector(".tab-btn"));
+      renderResults(data.keys, data.doors, null);
+    }
+
+    function buildReverseSolverInputs() {
+      document.getElementById("reverseChambers").innerHTML = `<div class="grid-3">` + [1,2,3,4,5,6].map(c => `
+        <div class="axis-box">
+          <strong>Chamber ${c}</strong>
+          <label>Bottom Pin</label><input id="rev_b_${c}" type="number" value="2" />
+          <label>Master Wafers (comma-sep)</label><input id="rev_m_${c}" placeholder="e.g., 2,4" />
+        </div>`).join("") + `</div>`;
+    }
+
+    async function runReverseSolver() {
+      const chambers = [1,2,3,4,5,6].map(c => ({
+        bottom: Number(document.getElementById(`rev_b_${c}`).value),
+        masters: document.getElementById(`rev_m_${c}`).value.trim() ? document.getElementById(`rev_m_${c}`).value.split(",").map(Number) : []
+      }));
+      const res = await fetch("/api/tools/reverse-pin", { method: "POST", headers: authHeaders(), body: JSON.stringify({ chambers }) });
+      const data = await res.json();
+      document.getElementById("reverseResults").innerHTML =
+        `<div class="alert-ok"><strong>Total Working Key Bittings Found: ${data.total_working_keys}</strong><br><br>` +
+        data.bittings.map(b => `<code>${b.join("-")}</code>`).join("  |  ") + `</div>`;
+    }
+
+    async function runBenchCalc() {
+      const opLines = document.getElementById("benchKeys").value.trim().split("\n").map(line => line.split(",").map(Number));
+      const isSfic = document.getElementById("benchSfic").value === "true";
+      const res = await fetch("/api/tools/bench-calc", {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({
+          is_sfic: isSfic, macs: Number(document.getElementById("benchMacs").value),
+          operating_bittings: opLines, control_bitting: isSfic ? document.getElementById("benchCtrl").value.split(",").map(Number) : null
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail); return; }
+      const warnHtml = data.macs_warnings.length ? `<div class="alert-warn">${data.macs_warnings.join("<br>")}</div>` : `<div class="alert-ok">All key cuts pass MACS check.</div>`;
+      const tableHtml = `<table><thead><tr><th>Chamber</th><th>Bottom</th><th>Masters</th><th>Control</th><th>Driver</th></tr></thead><tbody>` +
+        data.stacks.map((s, i) => `<tr><td>${i+1}</td><td>${s.bottom}</td><td>${s.masters.join("+") || "-"}</td><td>${s.control_buildup ?? "-"}</td><td>${s.driver}</td></tr>`).join("") + `</tbody></table>`;
+      document.getElementById("benchResults").innerHTML = warnHtml + tableHtml;
+    }
+
+    async function loadUsers() {
+      const res = await fetch("/api/users", { headers: authHeaders() });
+      if (!res.ok) return;
+      const users = await res.json();
+      document.querySelector("#usersTable tbody").innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.username}</strong></td><td>${u.full_name}</td><td>${u.role}</td><td>${u.is_active ? "Active" : "Disabled"}</td>
+          <td>${u.username !== "admin" ? `<button class="danger" onclick="toggleUser('${u.id}', '${u.role}', ${u.is_active ? 0 : 1})">${u.is_active ? "Disable" : "Enable"}</button>` : "Primary Admin"}</td>
+        </tr>`).join("");
+    }
+
+    async function createStaffUser() {
+      const res = await fetch("/api/users", {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({
+          username: document.getElementById("newUsername").value, full_name: document.getElementById("newFullName").value,
+          role: document.getElementById("newUserRole").value, password: document.getElementById("newUserPass").value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail); return; }
+      document.getElementById("newUsername").value = ""; document.getElementById("newFullName").value = ""; document.getElementById("newUserPass").value = "";
+      loadUsers();
+    }
+
+    async function toggleUser(uid, role, active) {
+      await fetch(`/api/users/${uid}`, { method: "PATCH", headers: authHeaders(), body: JSON.stringify({ role, is_active: active }) });
+      loadUsers();
+    }
+
+    loadBranding();
+    bootWorkspace();
+  </script>
+</body>
+</html>
