@@ -12,8 +12,18 @@ from engine.generator import generate_hierarchical_system, is_macs_valid
 from engine.solver import calculate_chamber_stack, get_valid_shear_heights, find_phantom_and_interchange_keys
 from engine.auth import verify_password, generate_session_token, has_permission
 
-# Automatically uses Firebase Firestore if firebase_key.json exists; otherwise uses local SQLite
-if os.path.exists(os.getenv("FIREBASE_CREDENTIALS", "firebase_key.json")):
+# Use Firebase Firestore when a key file or Google Cloud ADC/project env var is present; otherwise fall back to SQLite
+CRED_PATH = os.getenv("FIREBASE_CREDENTIALS", "firebase_key.json")
+HAS_FIREBASE_CREDS = (
+    os.path.exists(CRED_PATH)
+    or bool(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+    or bool(os.getenv("GOOGLE_CLOUD_PROJECT"))
+    or bool(os.getenv("GCLOUD_PROJECT"))
+)
+
+if HAS_FIREBASE_CREDS:
+    if not os.getenv("GOOGLE_CLOUD_PROJECT") and not os.getenv("GCLOUD_PROJECT"):
+        os.environ["GOOGLE_CLOUD_PROJECT"] = "nps-master-key"
     from engine.firebase_db import (
         init_db, get_settings, update_setting, get_user_by_username, create_session,
         get_user_by_token, delete_session, list_users, create_user, update_user_role_or_status,
