@@ -1,25 +1,34 @@
 import os
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 import firebase_admin
 from firebase_admin import credentials, firestore
 from .auth import hash_password
 
 CRED_PATH = os.getenv("FIREBASE_CREDENTIALS", "firebase_key.json")
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCLOUD_PROJECT") or "nps-master-key"
+PROJECT_ID = (
+    os.getenv("GOOGLE_CLOUD_PROJECT")
+    or os.getenv("GCLOUD_PROJECT")
+    or "nps-master-key"
+)
 
 
 def _init_firestore():
+    options = {"projectId": PROJECT_ID} if PROJECT_ID else None
+
     if os.path.exists(CRED_PATH):
         if not firebase_admin._apps:
             cred = credentials.Certificate(CRED_PATH)
-            firebase_admin.initialize_app(cred, options={"projectId": PROJECT_ID})
+            firebase_admin.initialize_app(cred, options=options)
         return firestore.client()
 
-    # Supports Application Default Credentials (`gcloud auth application-default login`) or cloud IAM
-    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("CODESPACES") or PROJECT_ID:
+    if (
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        or os.getenv("CODESPACES")
+        or PROJECT_ID
+    ):
         if not firebase_admin._apps:
-            firebase_admin.initialize_app(options={"projectId": PROJECT_ID})
+            firebase_admin.initialize_app(options=options)
         return firestore.client()
 
     return None
@@ -42,7 +51,7 @@ def init_db():
             "role": "admin",
             "password_hash": hash_password("npsadmin"),
             "is_active": 1,
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         })
     settings_ref = db.collection("app_settings").document("branding")
     if not settings_ref.get().exists:
@@ -70,7 +79,7 @@ def create_session(token: str, user_id: str):
     db.collection("sessions").document(token).set({
         "token": token,
         "user_id": str(user_id),
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     })
 
 
@@ -92,7 +101,7 @@ def get_user_by_token(token: str) -> Optional[Dict]:
         "username": u["username"],
         "full_name": u["full_name"],
         "role": u["role"],
-        "is_active": u["is_active"]
+        "is_active": u["is_active"],
     }
 
 
@@ -121,7 +130,7 @@ def create_user(username: str, full_name: str, role: str, password: str) -> str:
         "role": role,
         "password_hash": hash_password(password),
         "is_active": 1,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     })
     return uname
 
@@ -140,7 +149,7 @@ def create_client(data: Dict) -> str:
         "email": data.get("email", ""),
         "address": data.get("address", ""),
         "notes": data.get("notes", ""),
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     })
     return doc_ref.id
 
@@ -156,7 +165,7 @@ def save_key_system(
     profile: Dict,
     keys: List[Dict],
     doors: List[Dict],
-    created_by: str
+    created_by: str,
 ) -> str:
     doc_ref = db.collection("key_systems").document()
     doc_ref.set({
@@ -168,21 +177,24 @@ def save_key_system(
         "keys": keys,
         "doors": doors,
         "created_by": created_by,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
     })
     return doc_ref.id
 
 
 def list_client_systems(client_id: str) -> List[Dict]:
     docs = db.collection("key_systems").where("client_id", "==", str(client_id)).stream()
-    systems = [{
-        "id": d.to_dict()["id"],
-        "client_id": d.to_dict()["client_id"],
-        "system_name": d.to_dict()["system_name"],
-        "keyway_code": d.to_dict()["keyway_code"],
-        "created_by": d.to_dict().get("created_by", "-"),
-        "created_at": d.to_dict().get("created_at", "")
-    } for d in docs]
+    systems = [
+        {
+            "id": d.to_dict()["id"],
+            "client_id": d.to_dict()["client_id"],
+            "system_name": d.to_dict()["system_name"],
+            "keyway_code": d.to_dict()["keyway_code"],
+            "created_by": d.to_dict().get("created_by", "-"),
+            "created_at": d.to_dict().get("created_at", ""),
+        }
+        for d in docs
+    ]
     return sorted(systems, key=lambda x: x["created_at"], reverse=True)
 
 
