@@ -1,4 +1,3 @@
-cat <<'EOF' > app.py
 import os
 import itertools
 from fastapi import FastAPI, HTTPException, Header, Depends
@@ -342,4 +341,3 @@ def api_bench_calc(req: BenchCalcInput, user: Dict = Depends(get_current_user)):
         return {"stacks": stacks, "macs_warnings": macs_warnings}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-EOF
