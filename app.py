@@ -225,17 +225,6 @@ def api_delete_client_system(
     return {"status": "deleted", "id": system_id}
 
 
-@app.delete("/api/systems/{system_id}")
-def api_delete_system(
-    system_id: str,
-    user: Dict = Depends(require_perm("generate_systems"))
-):
-    status = delete_key_system(system_id)
-    if status == "not_found":
-        raise HTTPException(status_code=404, detail="System not found.")
-    return {"status": "deleted", "id": system_id}
-
-
 def _mask_sensitive_keys(keys: List[Dict], role: str) -> List[Dict]:
     if has_permission(role, "view_top_masters"):
         return keys
