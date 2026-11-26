@@ -21,7 +21,8 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = (
 from engine.firebase_db import (
     init_db, get_settings, update_setting, get_user_by_username, create_session,
     get_user_by_token, delete_session, list_users, create_user, update_user_role_or_status,
-    create_client, list_clients, save_key_system, list_client_systems, get_key_system
+    create_client, list_clients, save_key_system, list_client_systems, get_key_system,
+    delete_key_system
 )
 
 STORAGE_MODE = "Firebase Cloud (Firestore)"
@@ -210,6 +211,29 @@ def api_create_client(client: ClientInput, user: Dict = Depends(require_perm("ma
 @app.get("/api/clients/{client_id}/systems")
 def api_client_systems(client_id: str, user: Dict = Depends(get_current_user)):
     return list_client_systems(client_id)
+
+
+@app.delete("/api/clients/{client_id}/systems/{system_id}")
+def api_delete_client_system(
+    client_id: str,
+    system_id: str,
+    user: Dict = Depends(require_perm("generate_systems"))
+):
+    status = delete_key_system(system_id, client_id=client_id)
+    if status == "not_found":
+        raise HTTPException(status_code=404, detail="System not found for this client.")
+    return {"status": "deleted", "id": system_id}
+
+
+@app.delete("/api/systems/{system_id}")
+def api_delete_system(
+    system_id: str,
+    user: Dict = Depends(require_perm("generate_systems"))
+):
+    status = delete_key_system(system_id)
+    if status == "not_found":
+        raise HTTPException(status_code=404, detail="System not found.")
+    return {"status": "deleted", "id": system_id}
 
 
 def _mask_sensitive_keys(keys: List[Dict], role: str) -> List[Dict]:
