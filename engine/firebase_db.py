@@ -208,7 +208,3 @@ def delete_key_system(system_id: str, client_id: Optional[str] = None) -> str:
     doc_ref.delete()
     return "deleted"
 ```[cite: 8]
-
----
-
-Paste that into `engine/firebase_db.py` first—say **next** when you're ready for `app.py`!
