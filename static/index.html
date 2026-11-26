@@ -239,6 +239,7 @@
     let IS_SFIC = false;
     let SFIC_HEIGHT = 23;
     let SELECTED_CLIENT_ID = null;
+    let SELECTED_CLIENT_NAME = "None";
     let LAST_GENERATED = null;
     let UPLOADED_LOGO_DATA = "";
 
@@ -399,7 +400,10 @@
       if (!res.ok) { alert("Error: " + data.detail); return; }
       LAST_GENERATED = data;
       renderResults(data.keys, data.doors, data.audits);
-      if (data.saved_system_id) alert("Saved to active client record!");
+      if (data.saved_system_id) {
+        alert("Saved to active client record!");
+        if (SELECTED_CLIENT_ID) await refreshClientSystems(SELECTED_CLIENT_ID);
+      }
     }
 
     function renderResults(keys, doors, audits) {
@@ -456,15 +460,41 @@
       ).join("");
     }
 
+    async function refreshClientSystems(clientId) {
+      const res = await fetch(`/api/clients/${encodeURIComponent(clientId)}/systems`, { headers: authHeaders() });
+      const systems = await res.json();
+      document.querySelector("#savedSystemsTable tbody").innerHTML = systems.map(s => {
+        const safeName = (s.system_name || "").replace(/'/g, "\\'");
+        return `<tr><td>${s.system_name}</td><td>${s.keyway_code}</td><td>${s.created_by || "-"}</td>
+         <td style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+           <button class="secondary" onclick="loadSavedSystem('${s.id}')">Open</button>
+           <button class="danger" onclick="deleteClientSystem('${clientId}', '${s.id}', '${safeName}')">Delete</button>
+         </td></tr>`;
+      }).join("");
+    }
+
     async function selectClient(id, name) {
       SELECTED_CLIENT_ID = id;
+      SELECTED_CLIENT_NAME = name;
       document.getElementById("activeClientBadge").innerText = name;
-      const res = await fetch(`/api/clients/${id}/systems`, { headers: authHeaders() });
-      const systems = await res.json();
-      document.querySelector("#savedSystemsTable tbody").innerHTML = systems.map(s =>
-        `<tr><td>${s.system_name}</td><td>${s.keyway_code}</td><td>${s.created_by || "-"}</td>
-         <td><button class="secondary" onclick="loadSavedSystem('${s.id}')">Open</button></td></tr>`
-      ).join("");
+      await refreshClientSystems(id);
+    }
+
+    async function deleteClientSystem(clientId, systemId, systemName = "") {
+      if (!clientId || !systemId) return;
+      const label = systemName ? `"${systemName}"` : "this system";
+      if (!window.confirm(`Delete ${label} from ${SELECTED_CLIENT_NAME}? This cannot be undone.`)) return;
+
+      const res = await fetch(
+        `/api/clients/${encodeURIComponent(clientId)}/systems/${encodeURIComponent(systemId)}`,
+        { method: "DELETE", headers: authHeaders() }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to delete system.");
+        return;
+      }
+      await refreshClientSystems(clientId);
     }
 
     async function loadSavedSystem(sysId) {
@@ -549,3 +579,6 @@
   </script>
 </body>
 </html>
+```[cite: 10]
+
+Once you paste this into `static/index.html` and hard-refresh your browser (`Ctrl+Shift+R` / `Cmd+Shift+R`), let me know if deleting a client's system works cleanly!
