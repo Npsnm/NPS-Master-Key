@@ -194,3 +194,16 @@ def list_client_systems(client_id: str) -> List[Dict]:
 def get_key_system(system_id: str) -> Optional[Dict]:
     doc = db.collection("key_systems").document(str(system_id)).get()
     return doc.to_dict() if doc.exists else None
+
+
+def delete_key_system(system_id: str, client_id: Optional[str] = None) -> str:
+    doc_ref = db.collection("key_systems").document(str(system_id))
+    doc = doc_ref.get()
+    if not doc.exists:
+        return "not_found"
+    if client_id is not None:
+        data = doc.to_dict() or {}
+        if str(data.get("client_id", "")) != str(client_id):
+            return "not_found"
+    doc_ref.delete()
+    return "deleted"
